@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АзизДжон - Битва</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            transition: background 1.5s ease;
+            background: #000;
+        }
+        
+        /* Фоны для локаций */
+        body.smoking {
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.9)), 
+                       url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23111"/><circle cx="30" cy="30" r="5" fill="%23555"/><circle cx="60" cy="40" r="7" fill="%23333"/><circle cx="50" cy="70" r="6" fill="%23444"/></svg>');
+            background-size: cover;
+            animation: smoke 15s infinite linear;
+        }
+        
+        body.toilet {
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.9)), 
+                       url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23002244"/><rect x="30" y="20" width="40" height="60" fill="%23444"/><circle cx="50" cy="35" r="10" fill="%23004488"/></svg>');
+            background-size: cover;
+            animation: waterDrip 8s infinite linear;
+        }
+        
+        body.mountains {
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9)), 
+                       url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23002211"/><polygon points="0,70 20,40 40,60 60,20 80,50 100,30 100,100 0,100" fill="%23333"/></svg>');
+            background-size: cover;
+            animation: mountainMove 20s infinite alternate ease-in-out;
+        }
+        
+        body.polyk {
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.9)), 
+                       url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23440000"/><rect x="20" y="20" width="60" height="60" fill="%23333" stroke="%23555" stroke-width="2"/><line x1="20" y1="40" x2="80" y2="40" stroke="%23555" stroke-width="2"/><line x1="20" y1="60" x2="80" y2="60" stroke="%23555" stroke-width="2"/></svg>');
+            background-size: cover;
+            animation: flicker 10s infinite alternate;
+        }
+        
+        /* Анимации для фонов */
+        @keyframes smoke {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+        
+        @keyframes waterDrip {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        @keyframes mountainMove {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 20% 20%; }
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.95; }
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 25px rgba(100, 100, 255, 0.3);
+            border: 1px solid rgba(100, 100, 255, 0.2);
+            animation: containerAppear 0.8s ease;
+            position: relative;
+            z-index: 2;
+        }
+        
+        @keyframes containerAppear {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px #6cf, 0 0 25px #6cf;
+            animation: titlePulse 3s infinite;
+            color: #aaf;
+        }
+        
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); text-shadow: 0 0 15px #6cf, 0 0 25px #6cf; }
+            50% { transform: scale(1.03); text-shadow: 0 0 20px #6cf, 0 0 30px #6cf, 0 0 40px #6cf; }
+        }
+        
+        .character {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 48px;
+            animation: bounce 2s infinite;
+            filter: drop-shadow(0 0 10px #f55);
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .stats {
+            background: rgba(30, 30, 60, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(100, 100, 255, 0.2);
+            animation: statsSlide 0.5s ease;
+            box-shadow: 0 0 15px rgba(80, 80, 255, 0.2);
+        }
+        
+        @keyframes statsSlide {
+            0% { opacity: 0; transform: translateX(-20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        
+        .health-bar {
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+            border: 1px solid rgba(100, 100, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff3355, #ff0022);
+            border-radius: 10px;
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+        }
+        
+        .player-health .health-fill {
+            background: linear-gradient(90deg, #35ff35, #00cc00);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(40, 40, 80, 0.6);
+            backdrop-filter: blur(5px);
+            color: white;
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 10px rgba(80, 80, 255, 0.3);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(150, 150, 255, 0.3), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(100, 100, 255, 0.5);
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .attack-btn {
+            background: rgba(180, 40, 40, 0.6);
+            box-shadow: 0 0 10px rgba(255, 50, 50, 0.4);
+            border: 1px solid rgba(255, 100, 100, 0.3);
+        }
+        
+        .attack-btn:hover {
+            box-shadow: 0 0 15px rgba(255, 50, 50, 0.6);
+        }
+        
+        .heal-btn {
+            background: rgba(40, 180, 40, 0.6);
+            box-shadow: 0 0 10px rgba(50, 255, 50, 0.4);
+            border: 1px solid rgba(100, 255, 100, 0.3);
+        }
+        
+        .heal-btn:hover {
+            box-shadow: 0 0 15px rgba(50, 255, 50, 0.6);
+        }
+        
+        .run-btn {
+            background: rgba(180, 180, 40, 0.6);
+            box-shadow: 0 0 10px rgba(255, 255, 50, 0.4);
+            border: 1px solid rgba(255, 255, 100, 0.3);
+        }
+        
+        .run-btn:hover {
+            box-shadow: 0 0 15px rgba(255, 255, 50, 0.6);
+        }
+        
+        .status-btn {
+            background: rgba(40, 40, 180, 0.6);
+            box-shadow: 0 0 10px rgba(50, 50, 255, 0.4);
+            border: 1px solid rgba(100, 100, 255, 0.3);
+        }
+        
+        .status-btn:hover {
+            box-shadow: 0 0 15px rgba(50, 50, 255, 0.6);
+        }
+        
+        .dialogue {
+            background: rgba(30, 30, 60, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-style: italic;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            animation: dialogueFade 0.5s ease;
+            font-size: 18px;
+            box-shadow: 0 0 20px rgba(80, 80, 255, 0.3);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dialogue::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(100, 100, 255, 0.7), transparent);
+            animation: dialogueGlow 3s infinite;
+        }
+        
+        @keyframes dialogueGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes dialogueFade {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .location-selector {
+            margin: 15px 0;
+        }
+        
+        .location-btn {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            background: rgba(40, 40, 80, 0.6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 10px rgba(80, 80, 255, 0.2);
+        }
+        
+        .location-btn:hover {
+            background: rgba(60, 60, 120, 0.7);
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(100, 100, 255, 0.4);
+        }
+        
+        .location-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .game-mode {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .mode-btn {
+            padding: 12px;
+            background: rgba(40, 40, 80, 0.6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 10px rgba(80, 80, 255, 0.2);
+        }
+        
+        .mode-btn:hover {
+            background: rgba(60, 60, 120, 0.7);
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(100, 100, 255, 0.4);
+        }
+        
+        .pvp-section, .tournament-section, .survival-section {
+            display: none;
+            animation: sectionAppear 0.5s ease;
+        }
+        
+        @keyframes sectionAppear {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .battle-log {
+            background: rgba(20, 20, 40, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(100, 100, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 5px;
+            background: rgba(40, 40, 80, 0.4);
+            animation: logEntry 0.3s ease;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+        
+        @keyframes logEntry {
+            0% { opacity: 0; transform: translateX(-10px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        
+        .subscription-panel {
+            background: rgba(180, 40, 40, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 100, 100, 0.3);
+            animation: pulseWarning 2s infinite;
+            box-shadow: 0 0 15px rgba(255, 50, 50, 0.4);
+        }
+        
+        @keyframes pulseWarning {
+            0%, 100% { box-shadow: 0 0 0 rgba(255, 0, 0, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(255, 50, 50, 0.6); }
+        }
+        
+        .subscription-btn {
+            background: rgba(40, 180, 40, 0.6);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            margin-top: 10px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(100, 255, 100, 0.3);
+            transition: all 0.3s;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 10px rgba(50, 255, 50, 0.3);
+        }
+        
+        .subscription-btn:hover {
+            background: rgba(60, 200, 60, 0.7);
+            box-shadow: 0 0 15px rgba(50, 255, 50, 0.5);
+        }
+        
+        .cooldown-indicator {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #ffcc44;
+            text-shadow: 0 0 5px rgba(255, 204, 68, 0.8);
+        }
+        
+        .player-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .player-level {
+            background: rgba(80, 60, 200, 0.6);
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(150, 100, 255, 0.3);
+            box-shadow: 0 0 10px rgba(100, 80, 255, 0.3);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Эффекты частиц для фона */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0) rotate(0); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100vh) translateX(100vw) rotate(360deg); opacity: 0; }
+        }
+        
+        /* Анимации для разных локаций */
+        .smoking-particle {
+            background: #aaa;
+            box-shadow: 0 0 10px #aaa, 0 0 20px #fff;
+        }
+        
+        .toilet-particle {
+            background: #00b3ff;
+            box-shadow: 0 0 10px #00b3ff, 0 0 20px #00b3ff;
+        }
+        
+        .mountain-particle {
+            background: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50, 0 0 20px #4CAF50;
+        }
+        
+        .polyk-particle {
+            background: #ff3b3b;
+            box-shadow: 0 0 10px #ff3b3b, 0 0 20px #ff3b3b;
+        }
+        
+        /* Эффект Game Over */
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(200, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            flex-direction: column;
+            animation: screenShake 0.5s ease-in-out, redPulse 2s infinite;
+            backdrop-filter: blur(10px);
+        }
+        
+        .victory {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 150, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            flex-direction: column;
+            animation: screenShake 0.5s ease-in-out, greenPulse 2s infinite;
+            backdrop-filter: blur(10px);
+        }
+        
+        .game-over h2, .victory h2 {
+            font-size: 48px;
+            text-shadow: 0 0 20px #000, 0 0 30px #000;
+            animation: textPulse 1.5s infinite;
+            text-align: center;
+        }
+        
+        .game-over button, .victory button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-shadow: 0 0 10px #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-over button:hover, .victory button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        
+        @keyframes screenShake {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-10px, 10px); }
+            40% { transform: translate(10px, -10px); }
+            60% { transform: translate(-10px, -10px); }
+            80% { transform: translate(10px, 10px); }
+            100% { transform: translate(0, 0); }
+        }
+        
+        @keyframes redPulse {
+            0%, 100% { background-color: rgba(200, 0, 0, 0.9); }
+            50% { background-color: rgba(150, 0, 0, 0.95); }
+        }
+        
+        @keyframes greenPulse {
+            0%, 100% { background-color: rgba(0, 150, 0, 0.9); }
+            50% { background-color: rgba(0, 120, 0, 0.95); }
+        }
+        
+        @keyframes textPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🎮 БИТВА С АЗИЗДЖОНОМ</h1>
+            <div class="character">💪🔥🥊</div>
+            <div class="player-info">
+                <span>Игрок: <span id="playerName">Гость</span></span>
+                <span class="player-level">Ур. <span id="playerLevel">1</span></span>
+            </div>
+        </div>
+        
+        <div class="subscription-panel" id="subscriptionPanel">
+            <h3>📢 Подпишитесь на канал!</h3>
+            <p>Для доступа к игре необходимо подписаться на наш канал</p>
+            <button class="subscription-btn" onclick="checkSubscription()">✅ Я подписался</button>
+        </div>
+        
+        <div class="game-mode">
+            <button class="mode-btn" onclick="showMode('single')">⚔️ Одиночная</button>
+            <button class="mode-btn" onclick="showMode('pvp')">🎮 PVP</button>
+            <button class="mode-btn" onclick="showMode('tournament')">🏆 Турнир</button>
+            <button class="mode-btn" onclick="showMode('survival')">🔥 Выживание</button>
+        </div>
+        
+        <div id="singlePlayer">
+            <div class="stats">
+                <h3>❤️ Ваше здоровье: <span id="playerHealth">100</span>% 
+                    <span class="cooldown-indicator" id="healCooldownInfo"></span>
+                </h3>
+                <div class="health-bar player-health">
+                    <div class="health-fill" id="playerHealthBar" style="width: 100%"></div>
+                </div>
+                
+                <h3>💀 АзизДжон: <span id="bossHealth">150</span>%</h3>
+                <div class="health-bar">
+                    <div class="health-fill" id="bossHealthBar" style="width: 100%"></div>
+                </div>
+            </div>
+            
+            <div class="location-selector">
+                <h3>📍 Выберите локацию:</h3>
+                <button class="location-btn" onclick="selectLocation('smoking')">🚬 Курилка</button>
+                <button class="location-btn" onclick="selectLocation('toilet')">🚽 Толчок</button>
+                <button class="location-btn" onclick="selectLocation('mountains')">🏔️ Горы Кавказа</button>
+                <button class="location-btn" onclick="selectLocation('polyk')">🏫 Полик</button>
+            </div>
+            
+            <div class="dialogue" id="dialogue">
+                💪 Выберите локацию и начните бой!
+            </div>
+            
+            <div class="buttons">
+                <button class="btn attack-btn" onclick="playerAttack()">🥊 Атака</button>
+                <button class="btn heal-btn" id="healBtn" onclick="playerHeal()">💊 Лечение</button>
+                <button class="btn status-btn" onclick="showStatus()">📊 Статус</button>
+                <button class="btn run-btn" onclick="runAway()">🏃 Бежать</button>
+            </div>
+            
+            <div class="battle-log" id="battleLog"></div>
+        </div>
+        
+        <div id="pvpSection" class="pvp-section">
+            <!-- PVP контент -->
+        </div>
+        
+        <div id="tournamentSection" class="tournament-section">
+            <!-- Турнирный контент -->
+        </div>
+        
+        <div id="survivalSection" class="survival-section">
+            <!-- Контент выживания -->
+        </div>
+    </div>
+
+    <script>
+        // Игровое состояние
+        const gameState = {
+            playerHealth: 100,
+            bossHealth: 150,
+            healCooldown: 0, // Текущее время перезарядки лечения
+            healCooldownMax: 3, // Полная перезарядка лечения (3 хода)
+            gameActive: false,
+            currentLocation: null,
+            playerLevel: 1,
+            playerName: 'Гость',
+            turnCount: 0 // Счетчик ходов для отслеживания перезарядки
+        };
+
+        const locationNames = {
+            smoking: '🚬 Курилка',
+            toilet: '🚽 Толчок',
+            mountains: '🏔️ Горы Кавказа',
+            polyk: '🏫 Полик'
+        };
+
+        // Добавляем создание частиц для фона
+        function createParticles(type) {
+            const particlesContainer = document.getElementById('particles');
+            particlesContainer.innerHTML = '';
+            
+            const particleCount = type === 'mountains' ? 30 : 20;
+            const particleClass = type + '-particle';
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle', particleClass);
+                
+                // Случайные параметры для частиц
+                const size = Math.random() * 10 + 5;
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+                const delay = Math.random() * 15;
+                const duration = Math.random() * 10 + 15;
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${posX}vw`;
+                particle.style.top = `${posY}vh`;
+                particle.style.animationDelay = `${delay}s`;
+                particle.style.animationDuration = `${duration}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Обновляем функцию выбора локации
+        function selectLocation(location) {
+            gameState.currentLocation = location;
+            gameState.gameActive = true;
+            gameState.healCooldown = 0; // Сбрасываем перезарядку лечения
+            gameState.turnCount = 0; // Сбрасываем счетчик ходов
+            
+            // Меняем класс body для смены фона
+            document.body.className = location;
+            
+            // Создаем частицы для фона
+            createParticles(location);
+            
+            // Обновляем информацию о перезарядке лечения
+            updateHealCooldownInfo();
+            
+            // Анимация появления диалога
+            const dialogue = document.getElementById('dialogue');
+            dialogue.style.animation = 'none';
+            setTimeout(() => {
+                dialogue.style.animation = 'dialogueFade 0.5s ease';
+                dialogue.textContent = `📍 Локация выбрана: ${locationNames[location]}! 💪`;
+            }, 10);
+            
+            addToLog(`📍 Вы выбрали локацию: ${locationNames[location]}`);
+            addToLog('🎮 Бой начался! Атакуйте АзизДжона!');
+        }
+        
+        // Функция атаки игрока
+        function playerAttack() {
+            if (!gameState.gameActive) return;
+            
+            const damage = Math.floor(Math.random() * 21) + 10; // 10-30 урона
+            gameState.bossHealth -= damage;
+            if (gameState.bossHealth < 0) gameState.bossHealth = 0;
+            
+            updateHealthBars();
+            addToLog(`🥊 Вы нанесли АзизДжону ${damage} урона!`);
+            
+            // Увеличиваем счетчик ходов и обновляем перезарядку
+            gameState.turnCount++;
+            if (gameState.healCooldown > 0) {
+                gameState.healCooldown--;
+                updateHealCooldownInfo();
+            }
+            
+            // Проверка победы
+            if (gameState.bossHealth <= 0) {
+                victory();
+                return;
+            }
+            
+            // Ответная атака босса
+            setTimeout(bossAttack, 800);
+        }
+        
+        // Функция лечения игрока
+        function playerHeal() {
+            if (!gameState.gameActive || gameState.healCooldown > 0) return;
+            
+            const heal = Math.floor(Math.random() * 21) + 20; // 20-40 лечения
+            gameState.playerHealth += heal;
+            if (gameState.playerHealth > 100) gameState.playerHealth = 100;
+            
+            // Устанавливаем перезарядку лечения
+            gameState.healCooldown = gameState.healCooldownMax;
+            updateHealCooldownInfo();
+            
+            updateHealthBars();
+            addToLog(`💊 Вы восстановили ${heal} здоровья!`);
+            addToLog(`⏳ Лечение перезаряжается: ${gameState.healCooldownMax} хода`);
+            
+            // Увеличиваем счетчик ходов
+            gameState.turnCount++;
+            
+            // Ответная атака босса
+            setTimeout(bossAttack, 800);
+        }
+        
+        // Функция атаки босса
+        function bossAttack() {
+            if (!gameState.gameActive) return;
+            
+            const damage = Math.floor(Math.random() * 16) + 15; // 15-30 урона
+            gameState.playerHealth -= damage;
+            if (gameState.playerHealth < 0) gameState.playerHealth = 0;
+            
+            updateHealthBars();
+            addToLog(`💀 АзизДжон атаковал и нанес ${damage} урона!`);
+            
+            // Проверка поражения
+            if (gameState.playerHealth <= 0) {
+                gameOver();
+            }
+        }
+        
+        // Функция побега
+        function runAway() {
+            if (!gameState.gameActive) return;
+            
+            const success = Math.random() > 0.5; // 50% шанс успеха
+            if (success) {
+                addToLog("🏃 Вы успешно сбежали!");
+                gameState.gameActive = false;
+                document.getElementById('dialogue').textContent = "🏃 Вы сбе
